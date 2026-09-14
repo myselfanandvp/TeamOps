@@ -1,0 +1,81 @@
+name: TeamOps
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: TeamOps_backend
+    ports:
+      - "${SERVER_PORT}:8000"
+    env_file:
+      - .env
+    # A bind mount makes migrations generated in the container available on the host.
+    volumes:
+      - ./backend:/app
+    depends_on:
+      database:
+        condition: service_healthy
+    develop:
+      watch:
+        - path: ./backend/pyproject.toml
+          action: rebuild
+          target: /app
+        - path: ./backend/uv.lock
+          action: rebuild
+          target: /app
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: TeamOps_nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - frontend
+      - backend
+    env_file:
+      - .env
+    develop:
+      watch:
+        - path: ./nginx/nginx.conf
+          action: sync+restart
+          target: /etc/nginx/conf.d/default.conf
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: TeamOps_frontend
+    ports:
+      - "${REACT_PORT}:5173"
+    env_file:
+      - .env
+    volumes:
+      - ./frontend:/app
+    develop:
+      watch:
+        - path: ./frontend/package*.json
+          action: rebuild
+          target: /app
+
+  database:
+    image: postgres:18
+    ports:
+      - "${DB_PORT}:5432"
+    container_name: TeamOps_database
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    env_file:
+      - .env
+    volumes:
+      - database_volume:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d ${DB_NAME}"]
+      interval: 10s # How often to run the test
+      timeout: 5s # How long to wait for a response before failing
+      retries: 5 # Number of consecutive failures before marking 'unhealthy'
+      start_period: 10s # Grace period to let the DB boot up before counting failures
+volumes:
+  database_volume:

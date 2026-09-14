@@ -1,0 +1,27 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [{ name = "myselfanandvp", email = "mailanandvp@gmail.com" }]
+requires-python = ">=3.14"
+dependencies = [
+  "djangorestframework>=3.18.1",
+  "drf-spectacular>=0.30.0",
+  "psycopg2-binary>=2.9.13",
+  "pydantic-settings>=2.15.0",
+  "ruff>=0.16.7",
+]
+
+[project.scripts]
+backend = "backend:main"
+
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"
+
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+extend-exclude = ["*/migrations/*.py", "manage.py"]
