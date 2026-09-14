@@ -2,16 +2,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    secret_key: str
-    debug: bool
-    db_name: str
-    db_user: str
-    db_pass: str
-    db_host: str
-    db_port: int
+    secret_key: str = "dummy-secret-key-for-testing"
+    debug: bool = False
+    db_name: str = "devtrack"
+    db_user: str = "postgres"
+    db_pass: str = "dummy-password"
+    db_host: str = "localhost"
+    db_port: int = 5432
 
     model_config = SettingsConfigDict(
         extra="ignore",
+        env_file="../.env",
     )
 
 
